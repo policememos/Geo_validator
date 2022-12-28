@@ -2,23 +2,35 @@ import json
 import numpy as np
 
 class PoligonObject():
-    def __init__(self, data):
-        self.name = data['properties']['description'] if data['properties']['description'] else 'Без описания'
+    def __init__(self, data, i):
+        self.name = data.get('properties').get('description') if data.get('properties').get('description') else 'Без описания'
         self.id = data['id']
-        self.points = self.pointParser(data['geometry']['coordinates'])
+        self.points = self.pointParser(data['geometry']['coordinates'][i])
+        self.rawData = data['geometry']['coordinates'][i]
 
 
     def pointParser(self, data):
         geo_arr = []
+                
         for j in range(len(data)-1):
-            geo_arr.append((tuple(data[j]), tuple(data[j +1]), j))
+            geo_arr.append([data[j], data[j +1], j])
         return geo_arr
     
     
 class IntersectionResulter():
     def __init__(self, map_name):
         self.objects = self.createDataObjects(map_name)
-        self.results = list()
+        self.results = []
+        self.flag = False
+        
+    def findOutsidePoints(self):
+        for obj in self.objects:
+            name = obj.name
+            id = obj.id
+            data = obj.rawData
+            set_len = len(set([str(x) for x in data]))
+            if len(data)-1 != set_len:
+                print(f'id зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны')
 
     def findIntersection(self, line1, line2):
         '''
@@ -48,23 +60,34 @@ class IntersectionResulter():
         except np.linalg.LinAlgError:
             return 0
 
-    def checkThisData(self, points):
-        for i in range(len(points)-1):
-            k = points[i]
-            for v in range(len(points)-i-2):
-                v = points[v+i+2]
-                if k[0] == v[1]: continue
-                res = self.findIntersection(k, v)
-                if isinstance(res, int):
-                    self.results.append(res) 
-                else:
-                    self.results.append(tuple(res))
+    def checkThisData(self):
+        for obj in self.objects:
+            name = obj.name
+            id = obj.id
+            points = obj.points
+            for i in range(len(points)-1):
+                k = points[i]
+                
+                for v in range(len(points)-i-2):
+                    v = points[v+i+2]
+                    if k[0] == v[1]: continue
+                    res = self.findIntersection(k, v)
+                    if type(res) == int:
+                        self.results.append(res) 
+                    else:
+                        if k[0][0] <= res[0] <= k[1][0] or v[0][0] <= res[0] <= v[1][0]:
+                            if k[0][1] <= res[1] <= k[1][1] or v[0][1] <= res[1] <= v[1][1]:
+                                self.results.append(tuple(res))
 
-        if any(q:=tuple(filter(lambda x: x, self.results))):
-            print('Ошибка, найдены точки пересечения:')
-            print(*q, sep='\n')
-        else:
-            print('Пересечений нет, тест пройден')
+            if any(q:=tuple(filter(lambda x: x, self.results))):
+                self.flag = True
+                print(f'id зоны: {id}\nИмя зоны: {name}')
+                print('Ошибка, найдены точки пересечения:')
+                print(*q, sep='\n', end='\n\n')
+        if not self.flag:
+            print('Тест пройден, пересечений нет')
+
+
 
     def createDataObjects(self, map_name):
         with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
@@ -73,45 +96,11 @@ class IntersectionResulter():
         arr = list()
         for obj in  my_map['features']:
             if obj['geometry']['type'] == 'Polygon':
-                arr.append(PoligonObject(obj))
+                for i in range(len(obj['geometry']['coordinates'])):
+                    arr.append(PoligonObject(obj, i))
         return arr
 
 
+intersec = IntersectionResulter('Карта Тюмени и Тюменской области_28-12-2022_11-39-44')
+intersec.findOutsidePoints()
 
-test = [
-            [60.58338876708975, 56.832553409644696],
-            [60.65102334960926, 56.83217699467162],
-            [60.64999338134753, 56.84647809347648],
-            [60.63935037597644, 56.86039757774293],
-            [60.56656595214833, 56.85531944939838],
-            [60.56261774047841, 56.84083357813022],
-            [60.58338876708975, 56.832553409644696]
-          ]
-
-test_obj = {
-      "type": "Feature",
-      "id": 6,
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [60.722562424805155, 56.86003801020114],
-            [60.73681031909227, 56.870192288802784],
-            [60.73629533496143, 56.85919169536988],
-            [60.720502488281745, 56.869628234829044],
-            [60.70831453051804, 56.87808814750843],
-            [60.722562424805155, 56.86003801020114]
-          ]
-        ]
-      },
-      "properties": {
-        "fill": "#ed4543",
-        "fill-opacity": 0.6,
-        "stroke": "#ed4543",
-        "stroke-width": "5",
-        "stroke-opacity": 0.9
-      }
-    }
-
-intersec = IntersectionResulter('map')
-print(intersec.objects)
