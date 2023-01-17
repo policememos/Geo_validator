@@ -1,15 +1,16 @@
 import json
 import numpy as np
+import os.path
 
 class PoligonObject():
     def __init__(self, data, i):
         self.name = data.get('properties').get('description') if data.get('properties').get('description') else 'Без описания'
         self.id = data['id']
-        self.points = self.pointParser(data['geometry']['coordinates'][i])
+        self.points = self.point_parser(data['geometry']['coordinates'][i])
         self.rawData = data['geometry']['coordinates'][i]
 
 
-    def pointParser(self, data):
+    def point_parser(self, data):
         geo_arr = []
                 
         for j in range(len(data)-1):
@@ -19,11 +20,11 @@ class PoligonObject():
     
 class IntersectionResulter():
     def __init__(self, map_name):
-        self.objects = self.createDataObjects(map_name)
+        self.objects = self.create_data_objects(map_name)
         self.results = []
         self.flag = False
     
-    def checkNames(self):
+    def check_names(self):
         if self.objects:
             rawPool = [obj.name for obj in self.objects]
             zoneIds = sorted(set([(_id[0]) for _id in (x.split() for x in rawPool)]))
@@ -34,7 +35,7 @@ class IntersectionResulter():
                     print(*filtList, sep='\n')
 
         
-    def findOutsidePoints(self):
+    def find_outside_points(self):
         if self.objects:
             for obj in self.objects:
                 name = obj.name
@@ -44,7 +45,7 @@ class IntersectionResulter():
                 if len(data)-1 != set_len:
                     print(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
 
-    def findIntersection(self, line1, line2):
+    def find_intersection(self, line1, line2):
         '''
         X(y2-y1) + Y(x1-x2) - x1*y2 + y1*x2 = 0 
         line = [[x1,y1],[x2,y2]] 
@@ -72,7 +73,7 @@ class IntersectionResulter():
         except np.linalg.LinAlgError:
             return 0
 
-    def checkThisData(self):
+    def check_this_data(self):
         if self.objects:
             for obj in self.objects:
                 name = obj.name
@@ -84,7 +85,7 @@ class IntersectionResulter():
                     for v in range(len(points)-i-2):
                         v = points[v+i+2]
                         if k[0] == v[1]: continue
-                        res = self.findIntersection(k, v)
+                        res = self.find_intersection(k, v)
                         if type(res) == int:
                             self.results.append(res) 
                         else:
@@ -102,24 +103,25 @@ class IntersectionResulter():
 
 
 
-    def createDataObjects(self, map_name):
-        try:
-            with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
-                my_map = file.read()
-            my_map = json.loads(my_map)
-            arr = list()
-            for obj in  my_map['features']:
-                if obj['geometry']['type'] == 'Polygon':
-                    for i in range(len(obj['geometry']['coordinates'])):
-                        arr.append(PoligonObject(obj, i))
-            return arr
-        except:
-            print(f'\n\nВы ввели: {map_name}\nКарты с таким именем в этой папке не найдено')
+    def create_data_objects(self, map_name):
+        with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
+            my_map = file.read()
+        my_map = json.loads(my_map)
+        arr = list()
+        for obj in  my_map['features']:
+            if obj['geometry']['type'] == 'Polygon':
+                for i in range(len(obj['geometry']['coordinates'])):
+                    arr.append(PoligonObject(obj, i))
+        return arr
 
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
-print('Потом введите сюда название файла с картой и нажмире на кравиатуре Enter')
-intersec = IntersectionResulter(input())
+print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
+while not os.path.exists(user_input:=input()):
+    print(f'\n\nВы ввели: {user_input}\nКарты с таким именем в этой папке не найдено')
+    print('Попробуйте снова')
+
+intersec = IntersectionResulter(user_input)
 # intersec.checkThisData()
-intersec.findOutsidePoints()
-intersec.checkNames()
+intersec.find_outside_points()
+intersec.check_names()
 
