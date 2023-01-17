@@ -1,6 +1,6 @@
 import json
 import numpy as np
-import os.path
+import os
 
 class PoligonObject():
     def __init__(self, data, i):
@@ -104,7 +104,7 @@ class IntersectionResulter():
 
 
     def create_data_objects(self, map_name):
-        with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
+        with open(f'{map_name}', 'r', encoding='utf-8') as file:
             my_map = file.read()
         my_map = json.loads(my_map)
         arr = list()
@@ -116,10 +116,13 @@ class IntersectionResulter():
 
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
 print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
-while not os.path.exists(user_input:=input()):
-    print(f'\n\nВы ввели: {user_input}\nКарты с таким именем в этой папке не найдено')
-    print('Попробуйте снова')
 
+while not os.path.exists(user_input:=str(input())+'.geojson'):
+    print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
+    print('Попробуйте снова')
+    
+os.system('clear')
+print('Считаю')
 intersec = IntersectionResulter(user_input)
 # intersec.checkThisData()
 intersec.find_outside_points()
