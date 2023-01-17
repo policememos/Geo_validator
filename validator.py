@@ -128,3 +128,5 @@ intersec = IntersectionResulter(user_input)
 intersec.find_outside_points()
 intersec.check_names()
 
+/workspaces/Geo_validator/Map.ico
+/workspaces/Geo_validator/validator.py
