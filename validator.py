@@ -24,23 +24,25 @@ class IntersectionResulter():
         self.flag = False
     
     def checkNames(self):
-        rawPool = [obj.name for obj in self.objects]
-        zoneIds = sorted(set([(_id[0]) for _id in (x.split() for x in rawPool)]))
-        for zone in zoneIds:
-            filtList = list(filter(lambda x: x.split()[0] == zone, rawPool))
-            if len(filtList) > 1:
-                print('Найдены зоны с одинаковым названием:')
-                print(*filtList, sep='\n')
+        if self.objects:
+            rawPool = [obj.name for obj in self.objects]
+            zoneIds = sorted(set([(_id[0]) for _id in (x.split() for x in rawPool)]))
+            for zone in zoneIds:
+                filtList = list(filter(lambda x: x.split()[0] == zone, rawPool))
+                if len(filtList) > 1:
+                    print('Найдены зоны с одинаковым названием:')
+                    print(*filtList, sep='\n')
 
         
     def findOutsidePoints(self):
-        for obj in self.objects:
-            name = obj.name
-            id = obj.id
-            data = obj.rawData
-            set_len = len(set([str(x) for x in data]))
-            if len(data)-1 != set_len:
-                print(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
+        if self.objects:
+            for obj in self.objects:
+                name = obj.name
+                id = obj.id
+                data = obj.rawData
+                set_len = len(set([str(x) for x in data]))
+                if len(data)-1 != set_len:
+                    print(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
 
     def findIntersection(self, line1, line2):
         '''
@@ -71,48 +73,53 @@ class IntersectionResulter():
             return 0
 
     def checkThisData(self):
-        for obj in self.objects:
-            name = obj.name
-            id = obj.id
-            points = obj.points
-            for i in range(len(points)-1):
-                k = points[i]
-                
-                for v in range(len(points)-i-2):
-                    v = points[v+i+2]
-                    if k[0] == v[1]: continue
-                    res = self.findIntersection(k, v)
-                    if type(res) == int:
-                        self.results.append(res) 
-                    else:
-                        if k[0][0] <= res[0] <= k[1][0] or v[0][0] <= res[0] <= v[1][0]:
-                            if k[0][1] <= res[1] <= k[1][1] or v[0][1] <= res[1] <= v[1][1]:
-                                self.results.append(tuple(res))
+        if self.objects:
+            for obj in self.objects:
+                name = obj.name
+                id = obj.id
+                points = obj.points
+                for i in range(len(points)-1):
+                    k = points[i]
+                    
+                    for v in range(len(points)-i-2):
+                        v = points[v+i+2]
+                        if k[0] == v[1]: continue
+                        res = self.findIntersection(k, v)
+                        if type(res) == int:
+                            self.results.append(res) 
+                        else:
+                            if k[0][0] <= res[0] <= k[1][0] or v[0][0] <= res[0] <= v[1][0]:
+                                if k[0][1] <= res[1] <= k[1][1] or v[0][1] <= res[1] <= v[1][1]:
+                                    self.results.append(tuple(res))
 
-            if any(q:=tuple(filter(lambda x: x, self.results))):
-                self.flag = True
-                print(f'id зоны: {id}\nИмя зоны: {name}')
-                print('Ошибка, найдены точки пересечения:')
-                print(*q, sep='\n', end='\n\n')
-        if not self.flag:
-            print('Тест пройден, пересечений нет')
+                if any(q:=tuple(filter(lambda x: x, self.results))):
+                    self.flag = True
+                    print(f'id зоны: {id}\nИмя зоны: {name}')
+                    print('Ошибка, найдены точки пересечения:')
+                    print(*q, sep='\n', end='\n\n')
+            if not self.flag:
+                print('Тест пройден, пересечений нет')
 
 
 
     def createDataObjects(self, map_name):
-        with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
-            my_map = file.read()
-        my_map = json.loads(my_map)
-        arr = list()
-        for obj in  my_map['features']:
-            if obj['geometry']['type'] == 'Polygon':
-                for i in range(len(obj['geometry']['coordinates'])):
-                    arr.append(PoligonObject(obj, i))
-        return arr
+        try:
+            with open(f'{map_name}.geojson', 'r', encoding='utf-8') as file:
+                my_map = file.read()
+            my_map = json.loads(my_map)
+            arr = list()
+            for obj in  my_map['features']:
+                if obj['geometry']['type'] == 'Polygon':
+                    for i in range(len(obj['geometry']['coordinates'])):
+                        arr.append(PoligonObject(obj, i))
+            return arr
+        except:
+            print(f'\n\nВы ввели: {map_name}\nКарты с таким именем в этой папке не найдено')
 
-
-intersec = IntersectionResulter('samaraMap')
-intersec.checkNames()
+print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
+print('Потом введите сюда название файла с картой и нажмире на кравиатуре Enter')
+intersec = IntersectionResulter(input())
 # intersec.checkThisData()
 intersec.findOutsidePoints()
+intersec.checkNames()
 
