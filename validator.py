@@ -22,6 +22,16 @@ class IntersectionResulter():
         self.objects = self.createDataObjects(map_name)
         self.results = []
         self.flag = False
+    
+    def checkNames(self):
+        rawPool = [obj.name for obj in self.objects]
+        zoneIds = sorted(set([(_id[0]) for _id in (x.split() for x in rawPool)]))
+        for zone in zoneIds:
+            filtList = list(filter(lambda x: x.split()[0] == zone, rawPool))
+            if len(filtList) > 1:
+                print('Найдены зоны с одинаковым названием:')
+                print(*filtList, sep='\n')
+
         
     def findOutsidePoints(self):
         for obj in self.objects:
@@ -30,7 +40,7 @@ class IntersectionResulter():
             data = obj.rawData
             set_len = len(set([str(x) for x in data]))
             if len(data)-1 != set_len:
-                print(f'id зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны')
+                print(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
 
     def findIntersection(self, line1, line2):
         '''
@@ -101,6 +111,8 @@ class IntersectionResulter():
         return arr
 
 
-intersec = IntersectionResulter('Карта Тюмени и Тюменской области_28-12-2022_11-39-44')
+intersec = IntersectionResulter('samaraMap')
+intersec.checkNames()
+# intersec.checkThisData()
 intersec.findOutsidePoints()
 
