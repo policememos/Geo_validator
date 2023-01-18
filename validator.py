@@ -3,12 +3,12 @@ import numpy as np
 import os
 
 class PoligonObject():
-    def __init__(self, data, i):
-        self.name = data.get('properties').get('description') if data.get('properties').get('description') else 'Без описания'
+    def __init__(self, data, i=0):
+        self.name = data.get('properties').get('description').replace('\n','').replace('<br>','') if data.get('properties').get('description') else 'Без описания'
         self.id = data['id']
         self.points = self.point_parser(data['geometry']['coordinates'][i])
         self.rawData = data['geometry']['coordinates'][i]
-
+        self.object = data
 
     def point_parser(self, data):
         geo_arr = []
@@ -18,26 +18,52 @@ class PoligonObject():
         return geo_arr
     
     
+class PointObject():
+    def __init__(self, data):
+        self.name = data.get('properties').get('description') if data.get('properties').get('description') else 'Без описания'
+        self.id = data['id']
+        self.point_coord = data.get('geometry').get('coordinates')
+        if x:=data.get('properties').get('iconCaption'):
+            self.icon_caption = x
+        self.point = data
+
+    
+    
 class IntersectionResulter():
     def __init__(self, map_name):
-        self.objects = self.create_data_objects(map_name)
+        self.coord_objects, self.points, self.file, self.objects = self.create_data_objects(map_name)
+        self.clear_pool__zone_names = self.check_names()
         self.results = []
         self.flag = False
     
     def check_names(self):
         if self.objects:
-            rawPool = [obj.name for obj in self.objects]
-            zoneIds = sorted(set([(_id[0]) for _id in (x.split() for x in rawPool)]))
-            for zone in zoneIds:
-                filtList = list(filter(lambda x: x.split()[0] == zone, rawPool))
+            raw_pool = [obj.name.replace('\n','').replace('</br>','') for obj in self.objects]
+            zone_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool)]))
+            zone_names = sorted(set([(' '.join(_id[1:])) for _id in (x.split() for x in raw_pool)]))
+            for zone in zone_ids:
+                filtList = list(filter(lambda x: x.split()[0] == zone, raw_pool))
                 if len(filtList) > 1:
                     print('Найдены зоны с одинаковым названием:')
                     print(*filtList, sep='\n')
+            for zone in zone_names:
+                filtList = list(filter(lambda x: ' '.join(x.split()[1:]) == zone, raw_pool))
+                if len(filtList) > 1:
+                    print('Найдены зоны с одинаковым названием:')
+                    print(*filtList, sep='\n')
+            return raw_pool
+            
+    
+    def show_names(self):
+        if self.objects:
+            raw_pool = [obj.name for obj in self.objects]
+            for zone in raw_pool:
+                print(zone)
 
         
     def find_outside_points(self):
-        if self.objects:
-            for obj in self.objects:
+        if self.coord_objects:
+            for obj in self.coord_objects:
                 name = obj.name
                 id = obj.id
                 data = obj.rawData
@@ -74,8 +100,8 @@ class IntersectionResulter():
             return 0
 
     def check_this_data(self):
-        if self.objects:
-            for obj in self.objects:
+        if self.coord_objects:
+            for obj in self.coord_objects:
                 name = obj.name
                 id = obj.id
                 points = obj.points
@@ -101,18 +127,60 @@ class IntersectionResulter():
             if not self.flag:
                 print('Тест пройден, пересечений нет')
 
-
-
     def create_data_objects(self, map_name):
         with open(f'{map_name}', 'r', encoding='utf-8') as file:
             my_map = file.read()
         my_map = json.loads(my_map)
-        arr = list()
+        arr_coords = list()
+        arr_points = list()
+        arr_objects = list()
         for obj in  my_map['features']:
             if obj['geometry']['type'] == 'Polygon':
                 for i in range(len(obj['geometry']['coordinates'])):
-                    arr.append(PoligonObject(obj, i))
-        return arr
+                    arr_coords.append(PoligonObject(obj, i))
+                arr_objects.append(PoligonObject(obj))
+            if obj['geometry']['type'] == 'Point':
+                arr_points.append(PointObject(obj))
+        return arr_coords, arr_points, my_map, arr_objects
+    
+    def check_points(self):
+        if self.points:
+            raw_pool_names = [pnt.name for pnt in self.points]
+            raw_pool_icon_caption = [pnt.icon_caption for pnt in self.points]
+            point_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool_names)]))
+            point_icon_captions = sorted(set([' '.join(_id[1:]) for _id in (x.split() for x in raw_pool_icon_caption)]))
+            for point in point_ids:
+                filt_list = list(filter(lambda x: x.split()[0] == point, raw_pool_names))
+                if len(filt_list) > 1:
+                    print('Найдены точки с одинаковым названием:')
+                    print(*filt_list, sep='\n')
+                    return False
+            for point in point_icon_captions:
+                filt_list = list(filter(lambda x: ' '.join(x.split()[1:]) == point, raw_pool_icon_caption))
+                if len(filt_list) > 1:
+                    print('Найдены точки с одинаковым названием:')
+                    print(*filt_list, sep='\n')
+                    return False
+            return True
+        
+    def rename_points(self):
+        if self.points:
+            if self.check_points():
+                for _point in self.points:
+                    if _point.icon_caption:
+                        _point.name = _point.icon_caption
+                        _point.point['properties'].pop('iconCaption')
+                        _point.point['properties']['description'] = _point.name.replace('\n','').replace('<br>','')
+            else:
+                raise ValueError('Проверка не пройдена\nУстраните ошибки: одинаковые названия точек на карте')
+        
+    def create_json(self):
+        objects = self.coord_objects
+        points = self.points
+        file = self.file
+        file['metadata']['description'] = file['metadata']['description']+'\nобработан скриптом проверки'
+        file['metadata']['features'] = [*objects, *points]
+             
 
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
 print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
@@ -125,5 +193,7 @@ os.system('clear')
 print('Считаю')
 intersec = IntersectionResulter(user_input)
 # intersec.checkThisData()
-intersec.find_outside_points()
-intersec.check_names()
+# intersec.find_outside_points()
+# intersec.check_names()
+intersec.check_points()
+# intersec.create_json()
