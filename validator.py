@@ -27,11 +27,11 @@ class PointObject():
             self.icon_caption = x
         self.point = data
 
-    
-    
+      
 class IntersectionResulter():
     def __init__(self, map_name):
         self.coord_objects, self.points, self.file, self.objects = self.create_data_objects(map_name)
+        self.del_fake_points()
         self.clear_pool__zone_names = self.check_names()
         self.results = []
         self.flag = False
@@ -146,7 +146,7 @@ class IntersectionResulter():
     def check_points(self):
         if self.points:
             raw_pool_names = [pnt.name for pnt in self.points]
-            raw_pool_icon_caption = [pnt.icon_caption for pnt in self.points]
+            raw_pool_icon_caption = [pnt.icon_caption for pnt in self.points if hasattr(pnt, 'icon_caption')]
             point_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool_names)]))
             point_icon_captions = sorted(set([' '.join(_id[1:]) for _id in (x.split() for x in raw_pool_icon_caption)]))
             for point in point_ids:
@@ -155,22 +155,36 @@ class IntersectionResulter():
                     print('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
                     return False
-            for point in point_icon_captions:
-                filt_list = list(filter(lambda x: ' '.join(x.split()[1:]) == point, raw_pool_icon_caption))
+            for caption in point_icon_captions:
+                filt_list = list(filter(lambda x: ' '.join(x.split()[1:]) == caption, raw_pool_icon_caption))
                 if len(filt_list) > 1:
                     print('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
                     return False
             return True
-        
+    
+    def del_fake_points(self):
+        if self.points:
+            res_arr = []
+            for point in self.points:
+                if hasattr(point, 'icon_caption'):
+                    if 'tzru' in point.name.lower() or 'tzru' in point.icon_caption.lower():
+                        res_arr.append(point)
+                else:
+                    if 'tzru' in point.name.lower():
+                        res_arr.append(point)
+            self.points = res_arr
+            
+            
     def rename_points(self):
         if self.points:
+            for _point in self.points:
+                if _point.icon_caption:
+                    _point.name = _point.icon_caption
+                    _point.point['properties'].pop('iconCaption')
+                    _point.point['properties']['description'] = _point.name.replace('\n','').replace('<br>','')
             if self.check_points():
-                for _point in self.points:
-                    if _point.icon_caption:
-                        _point.name = _point.icon_caption
-                        _point.point['properties'].pop('iconCaption')
-                        _point.point['properties']['description'] = _point.name.replace('\n','').replace('<br>','')
+                ...
             else:
                 raise ValueError('Проверка не пройдена\nУстраните ошибки: одинаковые названия точек на карте')
         
@@ -185,15 +199,17 @@ class IntersectionResulter():
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
 print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
 
-while not os.path.exists(user_input:=str(input())+'.geojson'):
-    print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
-    print('Попробуйте снова')
+# while not os.path.exists(user_input:=str(input())+'.geojson'):
+#     print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
+#     print('Попробуйте снова')
     
 os.system('clear')
 print('Считаю')
-intersec = IntersectionResulter(user_input)
+# intersec = IntersectionResulter(user_input)
+intersec = IntersectionResulter('tum.geojson')
 # intersec.checkThisData()
 # intersec.find_outside_points()
 # intersec.check_names()
 intersec.check_points()
+intersec.rename_points()
 # intersec.create_json()
