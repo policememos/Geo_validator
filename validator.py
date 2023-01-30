@@ -243,6 +243,10 @@ price = cp.parce_excel('sam_price', 'price')
 price_zones = cp.parce_excel('sam_price', 'price_zones')
 code_zones = cp.parce_excel('sam_shab_kodi_zon', 'code_zones')
     
+price_zones = sorted(list(price_zones))    
+code_zones = sorted(list(code_zones)) 
+    
+# Проверка на наличие в файле zt/yt
 if temp_1:=set(price) - set(yt):
     t_l = list(temp_1)
     if len(t_l)>1:
@@ -252,5 +256,13 @@ if temp_1:=set(price) - set(yt):
     else:
         print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
 
+# Проверка названия зон в шаблонах
+if temp_2:=set(price_zones).symmetric_difference(code_zones):
+    if len(t_l)>1:
+        print('Найдена неточность: найдены различия в названии зон в файлах Тарифы и Шаблон коды зон')
+        for i in t_l:
+            print(f'из {i[0]} в {i[1]}')
+    else:
+        print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
 
 
