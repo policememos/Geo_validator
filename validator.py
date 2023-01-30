@@ -259,7 +259,15 @@ code_zones = sorted(list(code_zones))
 #         print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
 
 # Проверка названия зон в шаблонах
-if temp_2:=sorted(set(code_price_zones).symmetric_difference(code_zones)):
+for i in code_price_zones[2:]:
+    
+    for j in code_zones:
+        if i[0] == j[0]:
+            if i[1] != j[1]:
+                print(i)
+                print(j)
+        
+if temp_2:=sorted(set(code_price_zones).difference(set(code_zones))):
     tempo = []
     for el in temp_2:
         if el[0][0:6] == map_region:
