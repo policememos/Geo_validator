@@ -2,6 +2,7 @@ import json
 import numpy as np
 import os
 import tarif_parser as tp
+import yt_parser as yp
 
 class PoligonObject():
     def __init__(self, data, i=0):
@@ -220,15 +221,15 @@ def check_zones_diff_mapZones(name):
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
 print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
 
-while not os.path.exists(user_input:=str(input())+'.geojson'):
-    print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
-    print('Попробуйте снова')
+# while not os.path.exists(user_input:=str(input())+'.geojson'):
+#     print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
+#     print('Попробуйте снова')
     
 os.system('clear')
 print('Считаю')
-intersec = IntersectionResulter(user_input)
+# intersec = IntersectionResulter(user_input)
 # intersec.show_names()
-# intersec = IntersectionResulter('tum.geojson')
+intersec = IntersectionResulter('omskNew.geojson')
 # intersec.checkThisData()
 # intersec.find_outside_points()
 # if intersec.check_names():
@@ -237,4 +238,18 @@ intersec = IntersectionResulter(user_input)
 #     print('Точки проверены, валидно')
 # intersec.rename_points()
 # intersec.create_json()
+
+yt = yp.parce_excel('yt')
+tarif = tp.parce_excel('shab')
+    
+if temp_1:=set(tarif) - set(yt):
+    t_l = list(temp_1)
+    if len(t_l)>1:
+        print('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
+        for i in t_l:
+            print(f'из {i[0]} в {i[1]}')
+    else:
+        print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
+
+
 

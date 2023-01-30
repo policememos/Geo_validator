@@ -9,7 +9,7 @@ def parce_excel(name):
             if flag:
                 flag = 0
                 continue
-            dataset.append(row[0])
-            dataset.append(row[2])    
+            dataset.append((row[0], row[2]))  
     return set(dataset)
+
 

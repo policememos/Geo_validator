@@ -26,5 +26,3 @@ def parce_excel(name):
         return None
     else:
         return set(dataset)
-
-print(parce_excel('yt'))
