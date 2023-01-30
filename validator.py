@@ -1,6 +1,7 @@
 import json
 import numpy as np
 import os
+import tarif_parser as tp
 
 class PoligonObject():
     def __init__(self, data, i=0):
@@ -41,16 +42,25 @@ class IntersectionResulter():
             raw_pool = [obj.name.replace('\n','').replace('</br>','') for obj in self.objects]
             zone_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool)]))
             zone_names = sorted(set([(' '.join(_id[1:])) for _id in (x.split() for x in raw_pool)]))
+            # print('Проверка на совпадение ID зон')
+            to_set = []
             for zone in zone_ids:
-                filtList = list(filter(lambda x: x.split()[0] == zone, raw_pool))
-                if len(filtList) > 1:
-                    print('Найдены зоны с одинаковым названием:')
-                    print(*filtList, sep='\n')
+                filtList_id = list(filter(lambda x: x.split()[0] == zone, raw_pool))
+                if len(filtList_id) > 1:
+                    # print(*filtList_id, sep='\n')
+                    to_set += filtList_id
+            print('Проверка на совпадение Названия зон')
             for zone in zone_names:
-                filtList = list(filter(lambda x: ' '.join(x.split()[1:]) == zone, raw_pool))
-                if len(filtList) > 1:
-                    print('Найдены зоны с одинаковым названием:')
-                    print(*filtList, sep='\n')
+                filtList_name = list(filter(lambda x: ' '.join(x.split()[1:]) == zone, raw_pool))
+                if len(filtList_name) > 1:
+                    # print('Найдены зоны с одинаковым названием:')
+                    # print(*filtList_name, sep='\n')
+                    to_set += filtList_name
+            # set_zones = [*filtList_name, *filtList_id]
+            # print('Найдены зоны с одинаковым названием:')
+            # print(*set_zones, sep='\n')
+            print(*set(to_set), sep='\n')
+            
             return raw_pool
             
     
@@ -59,6 +69,11 @@ class IntersectionResulter():
             raw_pool = [obj.name for obj in self.objects]
             for zone in raw_pool:
                 print(zone)
+                
+    def zone_names(self):
+        if self.objects:
+            raw_pool = [obj.name.split()[0] for obj in self.objects]
+            return raw_pool
 
         
     def find_outside_points(self):
@@ -196,20 +211,30 @@ class IntersectionResulter():
         file['metadata']['features'] = [*objects, *points]
              
 
+def check_zones_diff_mapZones(name):
+    excel_dataset = tp.parce_excel(name)
+    map_names = intersec.zone_names()
+    res_map_ex = set(map_names).difference(excel_dataset)
+    print(f'map - excel {res_map_ex}')
+
 print('Файл с картой для удобства лучше переименовать\nКарта Тюмени и Тюменской области_28-12-2022_11-39-44 -> карта\n')
 print('Потом введите сюда название файла с картой и нажмите на кравиатуре Enter')
 
-# while not os.path.exists(user_input:=str(input())+'.geojson'):
-#     print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
-#     print('Попробуйте снова')
+while not os.path.exists(user_input:=str(input())+'.geojson'):
+    print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
+    print('Попробуйте снова')
     
 os.system('clear')
 print('Считаю')
-# intersec = IntersectionResulter(user_input)
-intersec = IntersectionResulter('tum.geojson')
+intersec = IntersectionResulter(user_input)
+# intersec.show_names()
+# intersec = IntersectionResulter('tum.geojson')
 # intersec.checkThisData()
 # intersec.find_outside_points()
-# intersec.check_names()
-intersec.check_points()
-intersec.rename_points()
+# if intersec.check_names():
+#     print('Имена зон проверены, валидно')
+# if intersec.check_points():
+#     print('Точки проверены, валидно')
+# intersec.rename_points()
 # intersec.create_json()
+
