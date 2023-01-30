@@ -240,7 +240,7 @@ if intersec.check_points():
 # intersec.create_json()
 
 map_zone_names = intersec.id_name_map_zones
-map_region = map_zone_names[0][:6]
+map_region = map_zone_names[0][0][:6]
 yt = cp.parce_excel('sam_yt', 'yt')
 price = cp.parce_excel('sam_price', 'price')
 price_zones = cp.parce_excel('sam_price', 'price_zones')
@@ -252,8 +252,8 @@ code_zones_zo = sorted(list(code_zones))
 # Проверка названия зон в шаблонах
 pr_fl = True
 for i in code_price_zones:
-    if i[0][0:11] != map_region:
-        print(i[0][:11])
+    if i[0][0:6] != map_region:
+        print(i[0][:6])
         print(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
     else:
         for j in code_zones_zo:
