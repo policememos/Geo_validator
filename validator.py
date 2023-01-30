@@ -1,8 +1,7 @@
 import json
 import numpy as np
 import os
-import tarif_parser as tp
-import yt_parser as yp
+import csv_parser as cp
 
 class PoligonObject():
     def __init__(self, data, i=0):
@@ -239,10 +238,12 @@ intersec = IntersectionResulter('omskNew.geojson')
 # intersec.rename_points()
 # intersec.create_json()
 
-yt = yp.parce_excel('yt')
-tarif = tp.parce_excel('shab')
+yt = cp.parce_excel('sam_yt', 'yt')
+price = cp.parce_excel('sam_price', 'price')
+price_zones = cp.parce_excel('sam_price', 'price_zones')
+code_zones = cp.parce_excel('sam_shab_kodi_zon', 'code_zones')
     
-if temp_1:=set(tarif) - set(yt):
+if temp_1:=set(price) - set(yt):
     t_l = list(temp_1)
     if len(t_l)>1:
         print('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
