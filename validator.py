@@ -226,14 +226,14 @@ print('Потом введите сюда название файла с кар�
 #     print('Попробуйте снова')
     
 os.system('clear')
-print('Считаю')
+# print('Считаю')
 # intersec = IntersectionResulter(user_input)
 # intersec.show_names()
 intersec = IntersectionResulter('sam_map.geojson')
 # intersec.checkThisData()
 intersec.find_outside_points()
-if intersec.check_names():
-    print('Имена зон проверены, валидно')
+# if intersec.check_names():
+    # print('Имена зон проверены, валидно')
 if intersec.check_points():
     print('Точки проверены, валидно')
 # intersec.rename_points()
@@ -253,7 +253,6 @@ code_zones_zo = sorted(list(code_zones))
 pr_fl = True
 for i in code_price_zones:
     if i[0][0:6] != map_region:
-        print(i[0][:6])
         print(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
     else:
         for j in code_zones_zo:
