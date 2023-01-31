@@ -170,12 +170,14 @@ class IntersectionResulter():
                 if len(filt_list) > 1:
                     print('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
+                    print()
                     return False
             for caption in point_icon_captions:
                 filt_list = list(filter(lambda x: ' '.join(x.split()[1:]) == caption, raw_pool_icon_caption))
                 if len(filt_list) > 1:
                     print('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
+                    print()
                     return False
             return True
     
@@ -229,7 +231,7 @@ os.system('clear')
 # print('Считаю')
 # intersec = IntersectionResulter(user_input)
 # intersec.show_names()
-intersec = IntersectionResulter('sam_map.geojson')
+intersec = IntersectionResulter('omsk_map.geojson')
 # intersec.checkThisData()
 intersec.find_outside_points()
 if intersec.flag_names:
@@ -243,10 +245,10 @@ if intersec.check_points():
 
 map_zone_names = intersec.id_name_map_zones
 map_region = map_zone_names[0][0][:6]
-yt, yt_noset = cp.parce_excel('sam_yt', 'yt')
-price, price_noset = cp.parce_excel('sam_price', 'price')
-price_zones, price_zones_noset = cp.parce_excel('sam_price', 'price_zones')
-code_zones, code_zones_noset = cp.parce_excel('sam_shab_kodi_zon', 'code_zones')
+yt, yt_noset = cp.parce_excel('omsk_yt', 'yt')
+price, price_noset = cp.parce_excel('omsk_price', 'price')
+price_zones, price_zones_noset = cp.parce_excel('omsk_price', 'price_zones')
+code_zones, code_zones_noset = cp.parce_excel('omsk_shab', 'code_zones')
 code_zones_shab_ids = [x[0] for x in code_zones_noset]
     
 code_price_zones = sorted(list(price_zones))    
@@ -287,7 +289,6 @@ for i in code_price_zones:
     if i[0][:6] == map_region:
         if i[0] not in id_z_cod_zones:
             if pr_fl1:
-                print()
                 ppr_fl1 = False
             print(f'Ошибка: в файле Шаблон код зон не найдена зона {i[0]} с названием {i[1]}')
 print()
