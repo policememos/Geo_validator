@@ -57,11 +57,9 @@ def parce_excel(name, _type):
                     else:
                         print(f'Ошибка: в файле коды зон неправильно заполнена строка, данные из строки не валидны\nЗона: {row[3], row[7], row[10]}')
                         err_flag = True
-                        break
-
-            
+                        break    
             
     if err_flag:
         return None
     else:
-        return set(dataset)
+        return set(dataset), dataset

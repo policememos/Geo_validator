@@ -33,12 +33,13 @@ class IntersectionResulter():
     def __init__(self, map_name):
         self.coord_objects, self.points, self.file, self.objects = self.create_data_objects(map_name)
         self.del_fake_points()
-        self.clear_pool__zone_names, self.id_name_map_zones = self.check_names()
+        self.clear_pool__zone_names, self.id_name_map_zones, self.flag_names = self.check_names()
         self.results = []
         self.flag = False
     
     def check_names(self):
         if self.objects:
+            flag_names = True
             raw_pool = [obj.name.replace('\n','').replace('</br>','') for obj in self.objects]
             zone_ids_names = [(_id, name) for _id, name in map(lambda x: (x[0], ' '.join(x[1:])), map(lambda y: y.split(), raw_pool))]
             zone_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool)]))
@@ -48,21 +49,20 @@ class IntersectionResulter():
             for zone in zone_ids:
                 filtList_id = list(filter(lambda x: x.split()[0] == zone, raw_pool))
                 if len(filtList_id) > 1:
-                    # print(*filtList_id, sep='\n')
+                    flag_names = False
                     to_set += filtList_id
-            print('Проверка на совпадение Названия зон')
             for zone in zone_names:
                 filtList_name = list(filter(lambda x: ' '.join(x.split()[1:]) == zone, raw_pool))
                 if len(filtList_name) > 1:
-                    # print('Найдены зоны с одинаковым названием:')
-                    # print(*filtList_name, sep='\n')
+                    flag_names = False
                     to_set += filtList_name
-            # set_zones = [*filtList_name, *filtList_id]
-            # print('Найдены зоны с одинаковым названием:')
-            # print(*set_zones, sep='\n')
-            print(*set(to_set), sep='\n')
+
+            if not flag_names:
+                print('Ошибка в файле карты: Найдены зоны с одинаковым названием:')
+                print(*set(to_set), sep='\n')
+                print()
             
-            return raw_pool, zone_ids_names
+            return raw_pool, zone_ids_names, flag_names
             
     
     def show_names(self):
@@ -232,23 +232,41 @@ os.system('clear')
 intersec = IntersectionResulter('sam_map.geojson')
 # intersec.checkThisData()
 intersec.find_outside_points()
-# if intersec.check_names():
-    # print('Имена зон проверены, валидно')
+if intersec.flag_names:
+    print('Имена зон на карте проверены, валидно')
+    print()
 if intersec.check_points():
-    print('Точки проверены, валидно')
+    print('Точки на карте проверены, валидно')
+    print()
 # intersec.rename_points()
 # intersec.create_json()
 
 map_zone_names = intersec.id_name_map_zones
 map_region = map_zone_names[0][0][:6]
-yt = cp.parce_excel('sam_yt', 'yt')
-price = cp.parce_excel('sam_price', 'price')
-price_zones = cp.parce_excel('sam_price', 'price_zones')
-code_zones = cp.parce_excel('sam_shab_kodi_zon', 'code_zones')
+yt, yt_noset = cp.parce_excel('sam_yt', 'yt')
+price, price_noset = cp.parce_excel('sam_price', 'price')
+price_zones, price_zones_noset = cp.parce_excel('sam_price', 'price_zones')
+code_zones, code_zones_noset = cp.parce_excel('sam_shab_kodi_zon', 'code_zones')
+code_zones_shab_ids = [x[0] for x in code_zones_noset]
     
 code_price_zones = sorted(list(price_zones))    
 code_zones_zo = sorted(list(code_zones)) 
-    
+# Проверка  повторения id зон в шаблонах
+for el in price_noset:
+    if tuple(price_noset).count(el)>1:
+        print(f'Ошибка: в файле Тарифы найдено повторение тарифа из {el[0]} в {el[1]}')
+        price_noset.remove(el)
+for el in yt_noset:
+    if tuple(yt_noset).count(el)>1:
+        print(f'Ошибка: в файле yt/zt найдено повторение трансп. отношения из {el[0]} в {el[1]}')
+        yt_noset.remove(el)
+for el in code_zones_shab_ids:
+    if tuple(code_zones_shab_ids).count(el)>1:
+        print(f'Ошибка: в файле Шаблон коды зон найдено повторение id зоны {el}')
+        code_zones_shab_ids.remove(el)
+        
+
+
 # Проверка названия зон в шаблонах
 pr_fl = True
 for i in code_price_zones:
@@ -284,3 +302,24 @@ if temp_1:=set(price) - set(yt):
         print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
 print()
 
+# Проверка зон из карты с зонами в шаблонах
+geojson_id_zones = [x[0] for x in intersec.id_name_map_zones]
+yt_id_zones = []
+for i,j in yt:
+    yt_id_zones.append(i)
+    yt_id_zones.append(j)
+price_zones_ids = [x[0] for x in price_zones]
+
+for _id in set(geojson_id_zones):
+    if _id not in code_zones_shab_ids:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Шаблон коды зон')
+        
+for _id in set(geojson_id_zones):
+    if _id not in yt_id_zones:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе трансп. отношений yt/zt')
+
+for _id in set(geojson_id_zones):
+    if _id not in price_zones_ids:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
+
+    
