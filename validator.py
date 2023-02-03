@@ -283,7 +283,7 @@ class IntersectionResulter():
              
 
 def check_zones_diff_mapZones(name):
-    excel_dataset = tp.parce_excel(name)
+    excel_dataset = parce_excel(name)
     map_names = intersec.zone_names()
     res_map_ex = set(map_names).difference(excel_dataset)
     print(f'map - excel {res_map_ex}')
@@ -321,10 +321,10 @@ try:
 
     map_zone_names = intersec.id_name_map_zones
     map_region = map_zone_names[0][0][:6]
-    yt, yt_noset = parce_excel.parce_excel('yt', 'yt')
-    price, price_noset = parce_excel.parce_excel('price', 'price')
-    price_zones, price_zones_noset = parce_excel.parce_excel('price', 'price_zones')
-    code_zones, code_zones_noset = parce_excel.parce_excel('shab', 'code_zones')
+    yt, yt_noset = parce_excel('yt', 'yt')
+    price, price_noset = parce_excel('price', 'price')
+    price_zones, price_zones_noset = parce_excel('price', 'price_zones')
+    code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
     code_zones_shab_ids = [x[0] for x in code_zones_noset]
         
     code_price_zones = sorted(list(price_zones))    
