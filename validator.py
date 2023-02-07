@@ -306,100 +306,113 @@ print('\nи нажмите на кравиатуре Enter')
 print(input())
 print('\n\n\n\n\n\n\n\n')
 
+
+intersec = IntersectionResulter('map.geojson')
+# intersec.checkThisData()
+intersec.find_outside_points()
+print("Проверяю карту...")
+if intersec.flag_names:
+    print('Имена зон на карте проверены, валидно')
+    print()
+if intersec.check_points():
+    print('Точки на карте проверены, валидно')
+    print()
+# intersec.rename_points()
+# intersec.create_json()
+
+map_zone_names = intersec.id_name_map_zones
+map_region = map_zone_names[0][0][:6]
+print("Импортирую файл yt")
 try:
-    intersec = IntersectionResulter('map.geojson')
-    # intersec.checkThisData()
-    intersec.find_outside_points()
-    if intersec.flag_names:
-        print('Имена зон на карте проверены, валидно')
-        print()
-    if intersec.check_points():
-        print('Точки на карте проверены, валидно')
-        print()
-    # intersec.rename_points()
-    # intersec.create_json()
-
-    map_zone_names = intersec.id_name_map_zones
-    map_region = map_zone_names[0][0][:6]
     yt, yt_noset = parce_excel('yt', 'yt')
-    price, price_noset = parce_excel('price', 'price')
-    price_zones, price_zones_noset = parce_excel('price', 'price_zones')
-    code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
-    code_zones_shab_ids = [x[0] for x in code_zones_noset]
-        
-    code_price_zones = sorted(list(price_zones))    
-    code_zones_zo = sorted(list(code_zones)) 
-
-    # Проверка  повторения id зон в шаблонах
-    for el in price_noset:
-        if tuple(price_noset).count(el)>1:
-            print(f'Ошибка: в файле Тарифы найдено повторение тарифа из {el[0]} в {el[1]}')
-            price_noset.remove(el)
-    for el in yt_noset:
-        if tuple(yt_noset).count(el)>1:
-            print(f'Ошибка: в файле yt/zt найдено повторение трансп. отношения из {el[0]} в {el[1]}')
-            yt_noset.remove(el)
-    for el in code_zones_shab_ids:
-        if tuple(code_zones_shab_ids).count(el)>1:
-            print(f'Ошибка: в файле Шаблон коды зон найдено повторение id зоны {el}')
-            code_zones_shab_ids.remove(el)
-            
-
-
-    # Проверка названия зон в шаблонах
-    pr_fl = True
-    for i in code_price_zones:
-        if i[0][0:6] != map_region:
-            print(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
-        else:
-            for j in code_zones_zo:
-                if i[0] == j[0]:
-                    if i[1] != j[1]:
-                        if pr_fl:
-                            print()
-                            print('Найдена неточность: найдены различия в названии зон в файлах Тарифы и Шаблон коды зон')
-                            pr_fl = False
-                        print(f'В файле Тарифы id:"{i[0]}", название:"{i[1]}"\nА в Шаблоне коды зон: "{j[1]}"\n')
-    pr_fl1 = True
-    id_z_cod_zones = [x[0] for x in code_zones]
-    for i in code_price_zones:
-        if i[0][:6] == map_region:
-            if i[0] not in id_z_cod_zones:
-                if pr_fl1:
-                    ppr_fl1 = False
-                print(f'Ошибка: в файле Шаблон код зон не найдена зона {i[0]} с названием {i[1]}')
-    print()
-    # Проверка на наличие в файле zt/yt
-    if temp_1:=set(price) - set(yt):
-        t_l = [x for x in temp_1 if x[0][0:6] == map_region]
-        if len(t_l)>1:
-            print('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
-            for i in t_l:
-                print(f'из {i[0]} в {i[1]}')
-        elif len(t_l) == 1:
-            print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
-    print()
-
-    # Проверка зон из карты с зонами в шаблонах
-    geojson_id_zones = [x[0] for x in intersec.id_name_map_zones]
-    yt_id_zones = []
-    for i,j in yt:
-        yt_id_zones.append(i)
-        yt_id_zones.append(j)
-    price_zones_ids = [x[0] for x in price_zones]
-
-    for _id in set(geojson_id_zones):
-        if _id not in code_zones_shab_ids:
-            print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Шаблон коды зон')
-            
-    for _id in set(geojson_id_zones):
-        if _id not in yt_id_zones:
-            print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе трансп. отношений yt/zt')
-
-    for _id in set(geojson_id_zones):
-        if _id not in price_zones_ids:
-            print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
-
-        
 except:
-    print('не найден один из файлов, перепроверьте названия')    
+    print('Не найден файл yt.csv')
+print("Импортирую файл price")
+try:
+    price, price_noset = parce_excel('price', 'price')
+except:
+    print('Не найден файл price.csv')
+price_zones, price_zones_noset = parce_excel('price', 'price_zones')
+print("Импортирую файл shab\n")
+try:
+    code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
+except:
+    print('Не найден файл shab.csv')
+
+code_zones_shab_ids = [x[0] for x in code_zones_noset]
+    
+code_price_zones = sorted(list(price_zones))    
+code_zones_zo = sorted(list(code_zones)) 
+
+# Проверка  повторения id зон в шаблонах
+for el in price_noset:
+    if tuple(price_noset).count(el)>1:
+        print(f'Ошибка: в файле Тарифы найдено повторение тарифа из {el[0]} в {el[1]}')
+        price_noset.remove(el)
+for el in yt_noset:
+    if tuple(yt_noset).count(el)>1:
+        print(f'Ошибка: в файле yt/zt найдено повторение трансп. отношения из {el[0]} в {el[1]}')
+        yt_noset.remove(el)
+for el in code_zones_shab_ids:
+    if tuple(code_zones_shab_ids).count(el)>1:
+        print(f'Ошибка: в файле Шаблон коды зон найдено повторение id зоны {el}')
+        code_zones_shab_ids.remove(el)
+        
+
+
+# Проверка названия зон в шаблонах
+pr_fl = True
+for i in code_price_zones:
+    if i[0][0:6] != map_region:
+        print(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
+    else:
+        for j in code_zones_zo:
+            if i[0] == j[0]:
+                if i[1] != j[1]:
+                    if pr_fl:
+                        print()
+                        print('Найдена неточность: найдены различия в названии зон в файлах Тарифы и Шаблон коды зон')
+                        pr_fl = False
+                    print(f'В файле Тарифы id:"{i[0]}", название:"{i[1]}"\nА в Шаблоне коды зон: "{j[1]}"\n')
+pr_fl1 = True
+id_z_cod_zones = [x[0] for x in code_zones]
+for i in code_price_zones:
+    if i[0][:6] == map_region:
+        if i[0] not in id_z_cod_zones:
+            if pr_fl1:
+                ppr_fl1 = False
+            print(f'Ошибка: в файле Шаблон код зон не найдена зона {i[0]} с названием {i[1]}')
+print()
+# Проверка на наличие в файле zt/yt
+if temp_1:=set(price) - set(yt):
+    t_l = [x for x in temp_1 if x[0][0:6] == map_region]
+    if len(t_l)>1:
+        print('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
+        for i in t_l:
+            print(f'из {i[0]} в {i[1]}')
+    elif len(t_l) == 1:
+        print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
+print()
+
+# Проверка зон из карты с зонами в шаблонах
+geojson_id_zones = [x[0] for x in intersec.id_name_map_zones]
+yt_id_zones = []
+for i,j in yt:
+    yt_id_zones.append(i)
+    yt_id_zones.append(j)
+price_zones_ids = [x[0] for x in price_zones]
+
+for _id in set(geojson_id_zones):
+    if _id not in code_zones_shab_ids:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Шаблон коды зон')
+        
+for _id in set(geojson_id_zones):
+    if _id not in yt_id_zones:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе трансп. отношений yt/zt')
+
+for _id in set(geojson_id_zones):
+    if _id not in price_zones_ids:
+        print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
+a=input()
+
+
