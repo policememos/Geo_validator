@@ -108,9 +108,13 @@ class IntersectionResulter():
     def check_names(self):
         if self.objects:
             flag_names = True
-            raw_pool = [obj.name.replace('\n','').replace('</br>','') for obj in self.objects]
-            zone_ids_names = [(_id, name) for _id, name in map(lambda x: (x[0], ' '.join(x[1:])), map(lambda y: y.split(), raw_pool))]
-            zone_ids = sorted(set([(_id[0]) for _id in (x.split() for x in raw_pool)]))
+            raw_pool1 = [obj.name.strip().replace('\n','').replace('</br>','') for obj in self.objects]
+            raw_pool = []
+            for el_ in raw_pool1:
+                pool_name = el_[:12].replace(',', '') + el_[12:]
+                raw_pool.append(pool_name)
+            zone_ids_names = [(_id, name) for _id, name in map(lambda x: (x[0], ' '.join(x[1:]).replace(',','').strip()), map(lambda y: y.split(), raw_pool))]
+            zone_ids = sorted(set([(_id[0].strip().replace(',','')) for _id in (x.split() for x in raw_pool)]))
             zone_names = sorted(set([(' '.join(_id[1:])) for _id in (x.split() for x in raw_pool)]))
             # print('Проверка на совпадение ID зон')
             to_set = []
@@ -134,16 +138,14 @@ class IntersectionResulter():
             
     
     def show_names(self):
-        if self.objects:
-            raw_pool = [obj.name for obj in self.objects]
-            for zone in raw_pool:
+        if self.clear_pool__zone_names:
+            for zone in self.clear_pool__zone_names:
                 print(zone)
                 
-    def zone_names(self):
-        if self.objects:
-            raw_pool = [obj.name.split()[0] for obj in self.objects]
-            return raw_pool
-
+    def show_zone_ids(self):
+        if self.id_name_map_zones:
+            for elm in self.id_name_map_zones:
+                print(elm[0])
         
     def find_outside_points(self):
         if self.coord_objects:
@@ -293,7 +295,7 @@ print('''Подготовтье файлы для проверки (должны
       Шаблон коды зон\t->\tshab.csv
       Трансп. отношения\t->\tyt.csv
       Тарифы\t\t->\tprice.csv''')
-print('\nи нажмите на кравиатуре Enter')
+print('\nи нажмите на клавиатуре Enter')
 
 # while not os.path.exists(user_input:=str(input())+'.geojson'):
 #     print(f'\n\nВы ввели: {user_input.split(".")[0]}\nКарты с таким именем в этой папке не найдено')
@@ -314,35 +316,38 @@ print("Проверяю карту...")
 if intersec.flag_names:
     print('Имена зон на карте проверены, валидно')
     print()
-if intersec.check_points():
-    print('Точки на карте проверены, валидно')
-    print()
+intersec.show_names()
+intersec.show_zone_ids()
+
+# if intersec.check_points():
+    # print('Точки на карте проверены, валидно')
+    # print()
 # intersec.rename_points()
 # intersec.create_json()
 
 map_zone_names = intersec.id_name_map_zones
 map_region = map_zone_names[0][0][:6]
 print("Импортирую файл yt")
-try:
-    yt, yt_noset = parce_excel('yt', 'yt')
-except:
-    print('Не найден файл yt.csv')
-print("Импортирую файл price")
-try:
-    price, price_noset = parce_excel('price', 'price')
-except:
-    print('Не найден файл price.csv')
-price_zones, price_zones_noset = parce_excel('price', 'price_zones')
-print("Импортирую файл shab\n")
-try:
-    code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
-except:
-    print('Не найден файл shab.csv')
+# try:
+#     yt, yt_noset = parce_excel('yt', 'yt')
+# except:
+#     print('Не найден файл yt.csv')
+# print("Импортирую файл price")
+# try:
+#     price, price_noset = parce_excel('price', 'price')
+# except:
+#     print('Не найден файл price.csv')
+# price_zones, price_zones_noset = parce_excel('price', 'price_zones')
+# print("Импортирую файл shab\n")
+# try:
+#     code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
+# except:
+#     print('Не найден файл shab.csv')
 
-code_zones_shab_ids = [x[0] for x in code_zones_noset]
+# code_zones_shab_ids = [x[0] for x in code_zones_noset]
     
-code_price_zones = sorted(list(price_zones))    
-code_zones_zo = sorted(list(code_zones)) 
+# code_price_zones = sorted(list(price_zones))    
+# code_zones_zo = sorted(list(code_zones)) 
 
 # Проверка  повторения id зон в шаблонах
 for el in price_noset:
