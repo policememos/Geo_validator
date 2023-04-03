@@ -316,8 +316,8 @@ print("Проверяю карту...")
 if intersec.flag_names:
     print('Имена зон на карте проверены, валидно')
     print()
-intersec.show_names()
-intersec.show_zone_ids()
+# intersec.show_names()
+# intersec.show_zone_ids()
 
 # if intersec.check_points():
     # print('Точки на карте проверены, валидно')
@@ -328,26 +328,26 @@ intersec.show_zone_ids()
 map_zone_names = intersec.id_name_map_zones
 map_region = map_zone_names[0][0][:6]
 print("Импортирую файл yt")
-# try:
-#     yt, yt_noset = parce_excel('yt', 'yt')
-# except:
-#     print('Не найден файл yt.csv')
-# print("Импортирую файл price")
-# try:
-#     price, price_noset = parce_excel('price', 'price')
-# except:
-#     print('Не найден файл price.csv')
-# price_zones, price_zones_noset = parce_excel('price', 'price_zones')
-# print("Импортирую файл shab\n")
-# try:
-#     code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
-# except:
-#     print('Не найден файл shab.csv')
+try:
+    yt, yt_noset = parce_excel('yt', 'yt')
+except:
+    print('Не найден файл yt.csv')
+print("Импортирую файл price")
+try:
+    price, price_noset = parce_excel('price', 'price')
+except:
+    print('Не найден файл price.csv')
+price_zones, price_zones_noset = parce_excel('price', 'price_zones')
+print("Импортирую файл shab\n")
+try:
+    code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
+except:
+    print('Не найден файл shab.csv')
 
-# code_zones_shab_ids = [x[0] for x in code_zones_noset]
+code_zones_shab_ids = [x[0] for x in code_zones_noset]
     
-# code_price_zones = sorted(list(price_zones))    
-# code_zones_zo = sorted(list(code_zones)) 
+code_price_zones = sorted(list(price_zones))    
+code_zones_zo = sorted(list(code_zones)) 
 
 # Проверка  повторения id зон в шаблонах
 for el in price_noset:
@@ -418,6 +418,7 @@ for _id in set(geojson_id_zones):
 for _id in set(geojson_id_zones):
     if _id not in price_zones_ids:
         print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
+a=input()
 a=input()
 
 
