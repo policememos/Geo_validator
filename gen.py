@@ -1,5 +1,6 @@
 # from datetime import datetime as dt
 import csv
+import openpyxl
 # from itertools import combinations
 # import pandas as pd
 import json
@@ -361,6 +362,18 @@ if intersec.check_points():
 # intersec.rename_points()
 # intersec.create_json()
 
+def csv_to_excel(csv_file, excel_file):
+    csv_data = []
+    with open(csv_file) as file_obj:
+        reader = csv.reader(file_obj)
+        for row in reader:
+            csv_data.append(row)
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    for row in csv_data:
+        sheet.append(row)
+    workbook.save(excel_file)
+
 if not intersec.flag_alert:
 
     map_zone_names = intersec.id_name_map_zones
@@ -577,6 +590,11 @@ if not intersec.flag_alert:
             LOG_FILE.append('\n')  
             LOG_FILE.append('Формирую файл Прайс_сгенерировано.csv')
             writer.writerows(temporary)
+            
+    csv_to_excel('Шаблон коды зон.csv', 'Шаблон коды зон.xlsx')
+    csv_to_excel('Шаблон YT.csv', 'Шаблон YT.csv.xlsx')
+    csv_to_excel('Шаблон ZT.csv', 'Шаблон ZT.xlsx')
+    csv_to_excel('Прайс_сгенерировано.csv', 'Прайс_сгенерировано.xlsx')
 
                 
             
