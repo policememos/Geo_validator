@@ -4,6 +4,7 @@ import os
 # import csv_parser as cp
 import csv
 
+LOG_FILE = []
 
 def parce_excel(name, _type):
     dataset = []
@@ -11,7 +12,7 @@ def parce_excel(name, _type):
     err_flag = False
     match _type:
         case 'yt':
-            with open(f'{name}.csv', 'r', encoding='windows-1251') as file:
+            with open(f'{name}.csv', 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=';')
                 for row in reader:
                     if flag < 9:
@@ -22,15 +23,17 @@ def parce_excel(name, _type):
                             dataset.append((row[3], row[8]))
                         else:
                             print(f'Ошибка: в файле отношений зон неправильно заполнена строка, данные из строки не валидны\nЗона прибытия: {row[8], row[11], row[62], row[65]}')
+                            LOG_FILE.append(f'Ошибка: в файле отношений зон неправильно заполнена строка, данные из строки не валидны\nЗона прибытия: {row[8], row[11], row[62], row[65]}')
                             err_flag = True
                             break
                     else:
                         print(f'Ошибка: в файле отношений зон неправильно заполнена строка, данные из строки не валидны\nЗона отбытия: {row[3], row[6], row[57], row[60]}')
+                        LOG_FILE.append(f'Ошибка: в файле отношений зон неправильно заполнена строка, данные из строки не валидны\nЗона отбытия: {row[3], row[6], row[57], row[60]}')
                         err_flag = True
                         break
 
         case 'price':
-            with open(f'{name}.csv', 'r', encoding='windows-1251') as file:
+            with open(f'{name}.csv', 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=';')
                 flag = 1
                 for row in reader:
@@ -40,7 +43,7 @@ def parce_excel(name, _type):
                     dataset.append((row[0], row[2]))  
         
         case 'price_zones':
-            with open(f'{name}.csv', 'r', encoding='windows-1251') as file:
+            with open(f'{name}.csv', 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=';')
                 flag = 1
                 for row in reader:
@@ -51,7 +54,7 @@ def parce_excel(name, _type):
                     dataset.append((row[2], row[3]))  
             
         case 'code_zones':
-            with open(f'{name}.csv', 'r', encoding='windows-1251') as file:
+            with open(f'{name}.csv', 'r', encoding='utf-8') as file:
                 reader = csv.reader(file, delimiter=';')
                 for row in reader:
                     if flag < 9:
@@ -61,6 +64,7 @@ def parce_excel(name, _type):
                             dataset.append((row[3], row[10]))
                     else:
                         print(f'Ошибка: в файле коды зон неправильно заполнена строка, данные из строки не валидны\nЗона: {row[3], row[7], row[10]}')
+                        LOG_FILE.append(f'Ошибка: в файле коды зон неправильно заполнена строка, данные из строки не валидны\nЗона: {row[3], row[7], row[10]}')
                         err_flag = True
                         break    
             
@@ -131,8 +135,12 @@ class IntersectionResulter():
 
             if not flag_names:
                 print('Ошибка в файле карты: Найдены зоны с одинаковым названием:')
+                LOG_FILE.append('Ошибка в файле карты: Найдены зоны с одинаковым названием:')
                 print(*set(to_set), sep='\n')
+                for i in set(to_set):
+                    LOG_FILE.append(i)
                 print()
+                LOG_FILE.append('\n')
             
             return raw_pool, zone_ids_names, flag_names
             
@@ -141,11 +149,13 @@ class IntersectionResulter():
         if self.clear_pool__zone_names:
             for zone in self.clear_pool__zone_names:
                 print(zone)
+                LOG_FILE.append(zone)
                 
     def show_zone_ids(self):
         if self.id_name_map_zones:
             for elm in self.id_name_map_zones:
                 print(elm[0])
+                LOG_FILE.append(elm[0])
         
     def find_outside_points(self):
         if self.coord_objects:
@@ -156,6 +166,7 @@ class IntersectionResulter():
                 set_len = len(set([str(x) for x in data]))
                 if len(data)-1 != set_len:
                     print(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
+                    LOG_FILE.append(f'\nid зоны: {id}\nИмя зоны: {name}\nОшибка: В зоне найдены точки за пределами периметра зоны\n')
 
     def find_intersection(self, line1, line2):
         '''
@@ -208,10 +219,15 @@ class IntersectionResulter():
                 if any(q:=tuple(filter(lambda x: x, self.results))):
                     self.flag = True
                     print(f'id зоны: {id}\nИмя зоны: {name}')
+                    LOG_FILE.append(f'id зоны: {id}\nИмя зоны: {name}')
                     print('Ошибка, найдены точки пересечения:')
+                    LOG_FILE.append('Ошибка, найдены точки пересечения:')
                     print(*q, sep='\n', end='\n')
+                    for i in q:
+                        LOG_FILE.append(i)
             if not self.flag:
                 print('Тест пройден, пересечений нет')
+                LOG_FILE.append('Тест пройден, пересечений нет')
 
     def create_data_objects(self, map_name):
         with open(f'{map_name}', 'r', encoding='utf-8') as file:
@@ -239,15 +255,23 @@ class IntersectionResulter():
                 filt_list = list(filter(lambda x: x.split()[0] == point, raw_pool_names))
                 if len(filt_list) > 1:
                     print('Найдены точки с одинаковым названием:')
+                    LOG_FILE.append('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
+                    for i in filt_list:
+                        LOG_FILE.append(i)
                     print()
+                    LOG_FILE.append('\n')
                     return False
             for caption in point_icon_captions:
                 filt_list = list(filter(lambda x: ' '.join(x.split()[1:]) == caption, raw_pool_icon_caption))
                 if len(filt_list) > 1:
                     print('Найдены точки с одинаковым названием:')
+                    LOG_FILE.append('Найдены точки с одинаковым названием:')
                     print(*filt_list, sep='\n')
+                    for i in filt_list:
+                        LOG_FILE.append(i)
                     print()
+                    LOG_FILE.append('\n')
                     return False
             return True
     
@@ -289,6 +313,7 @@ def check_zones_diff_mapZones(name):
     map_names = intersec.zone_names()
     res_map_ex = set(map_names).difference(excel_dataset)
     print(f'map - excel {res_map_ex}')
+    LOG_FILE.append(f'map - excel {res_map_ex}')
 
 print('''Подготовтье файлы для проверки (должны лежать в этой же директории с валидатором):
       Карта из яндекса\t->\tmap.geojson
@@ -306,21 +331,27 @@ print('\nи нажмите на клавиатуре Enter')
 # intersec = IntersectionResulter(user_input)
 # intersec.show_names()
 print(input())
+
 print('\n\n\n\n\n\n\n\n')
 
+
+print("Проверяю карту...")
+LOG_FILE.append("Проверяю карту...")
 
 intersec = IntersectionResulter('map.geojson')
 # intersec.checkThisData()
 intersec.find_outside_points()
-print("Проверяю карту...")
 if intersec.flag_names:
     print('Имена зон на карте проверены, валидно')
+    LOG_FILE.append('Имена зон на карте проверены, валидно')
     print()
+    LOG_FILE.append('\n')
 # intersec.show_names()
 # intersec.show_zone_ids()
 
 # if intersec.check_points():
     # print('Точки на карте проверены, валидно')
+    # LOG_FILE.append('Точки на карте проверены, валидно')
     # print()
 # intersec.rename_points()
 # intersec.create_json()
@@ -328,21 +359,27 @@ if intersec.flag_names:
 map_zone_names = intersec.id_name_map_zones
 map_region = map_zone_names[0][0][:6]
 print("Импортирую файл yt")
+LOG_FILE.append("Импортирую файл yt")
 try:
     yt, yt_noset = parce_excel('yt', 'yt')
 except:
     print('Не найден файл yt.csv')
+    LOG_FILE.append('Не найден файл yt.csv')
 print("Импортирую файл price")
+LOG_FILE.append("Импортирую файл price")
 try:
     price, price_noset = parce_excel('price', 'price')
 except:
     print('Не найден файл price.csv')
+    LOG_FILE.append('Не найден файл price.csv')
 price_zones, price_zones_noset = parce_excel('price', 'price_zones')
 print("Импортирую файл shab\n")
+LOG_FILE.append("Импортирую файл shab\n")
 try:
     code_zones, code_zones_noset = parce_excel('shab', 'code_zones')
 except:
     print('Не найден файл shab.csv')
+    LOG_FILE.append('Не найден файл shab.csv')
 
 code_zones_shab_ids = [x[0] for x in code_zones_noset]
     
@@ -353,14 +390,17 @@ code_zones_zo = sorted(list(code_zones))
 for el in price_noset:
     if tuple(price_noset).count(el)>1:
         print(f'Ошибка: в файле Тарифы найдено повторение тарифа из {el[0]} в {el[1]}')
+        LOG_FILE.append(f'Ошибка: в файле Тарифы найдено повторение тарифа из {el[0]} в {el[1]}')
         price_noset.remove(el)
 for el in yt_noset:
     if tuple(yt_noset).count(el)>1:
         print(f'Ошибка: в файле yt/zt найдено повторение трансп. отношения из {el[0]} в {el[1]}')
+        LOG_FILE.append(f'Ошибка: в файле yt/zt найдено повторение трансп. отношения из {el[0]} в {el[1]}')
         yt_noset.remove(el)
 for el in code_zones_shab_ids:
     if tuple(code_zones_shab_ids).count(el)>1:
         print(f'Ошибка: в файле Шаблон коды зон найдено повторение id зоны {el}')
+        LOG_FILE.append(f'Ошибка: в файле Шаблон коды зон найдено повторение id зоны {el}')
         code_zones_shab_ids.remove(el)
         
 
@@ -370,15 +410,19 @@ pr_fl = True
 for i in code_price_zones:
     if i[0][0:6] != map_region:
         print(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
+        LOG_FILE.append(f'Ошибка: в карте с регионом {map_region} найдена зона {i[0]}, с названием {i[1]}')
     else:
         for j in code_zones_zo:
             if i[0] == j[0]:
                 if i[1] != j[1]:
                     if pr_fl:
                         print()
+                        LOG_FILE.append('\n')
                         print('Найдена неточность: найдены различия в названии зон в файлах Тарифы и Шаблон коды зон')
+                        LOG_FILE.append('Найдена неточность: найдены различия в названии зон в файлах Тарифы и Шаблон коды зон')
                         pr_fl = False
                     print(f'В файле Тарифы id:"{i[0]}", название:"{i[1]}"\nА в Шаблоне коды зон: "{j[1]}"\n')
+                    LOG_FILE.append(f'В файле Тарифы id:"{i[0]}", название:"{i[1]}"\nА в Шаблоне коды зон: "{j[1]}"\n')
 pr_fl1 = True
 id_z_cod_zones = [x[0] for x in code_zones]
 for i in code_price_zones:
@@ -387,17 +431,23 @@ for i in code_price_zones:
             if pr_fl1:
                 ppr_fl1 = False
             print(f'Ошибка: в файле Шаблон код зон не найдена зона {i[0]} с названием {i[1]}')
+            LOG_FILE.append(f'Ошибка: в файле Шаблон код зон не найдена зона {i[0]} с названием {i[1]}')
 print()
+LOG_FILE.append('\n')
 # Проверка на наличие в файле zt/yt
 if temp_1:=set(price) - set(yt):
     t_l = [x for x in temp_1 if x[0][0:6] == map_region]
     if len(t_l)>1:
         print('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
+        LOG_FILE.append('Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения:')
         for i in t_l:
             print(f'из {i[0]} в {i[1]}')
+            LOG_FILE.append(f'из {i[0]} в {i[1]}')
     elif len(t_l) == 1:
         print(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
+        LOG_FILE.append(f'Найдена ошибка: в файле кодов отношения зон (yt/zt) нет отношения из {t_l[0][0]} в {t_l[0][1]}')
 print()
+LOG_FILE.append('\n')
 
 # Проверка зон из карты с зонами в шаблонах
 geojson_id_zones = [x[0] for x in intersec.id_name_map_zones]
@@ -410,14 +460,17 @@ price_zones_ids = [x[0] for x in price_zones]
 for _id in set(geojson_id_zones):
     if _id not in code_zones_shab_ids:
         print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Шаблон коды зон')
+        LOG_FILE.append(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Шаблон коды зон')
         
 for _id in set(geojson_id_zones):
     if _id not in yt_id_zones:
         print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе трансп. отношений yt/zt')
+        LOG_FILE.append(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе трансп. отношений yt/zt')
 
 for _id in set(geojson_id_zones):
     if _id not in price_zones_ids:
         print(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
+        LOG_FILE.append(f'Ошибка: на карте есть зона id {_id}, но её нет в фалйе Тарифы')
 a=input()
 a=input()
 
